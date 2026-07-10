@@ -655,7 +655,7 @@ document.getElementById("importFileInput").addEventListener("change", async (e) 
   try {
     const text = await file.text()
     const data = JSON.parse(text)
-    if (!data.connections || !data.groups) {
+    if (!data.connections || !Array.isArray(data.connections)) {
       showToast(t("importInvalidFormat") || "Invalid import file format", "error")
       return
     }
