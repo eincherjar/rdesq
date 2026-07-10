@@ -1,0 +1,13 @@
+{
+  "name": "rdesq",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "build:win": "cargo build --release --target x86_64-pc-windows-gnu --manifest-path src-tauri/Cargo.toml"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  }
+}

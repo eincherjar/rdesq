@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title id="pageTitle">rdesq</title>
+  <link rel="stylesheet" href="/css/style.css" id="themeStylesheet">
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="titlebar-left">
+        <img class="titlebar-icon" src="icon.png" alt="">
+        <span class="titlebar-title">rdesq</span>
+      </div>
+      <div class="header-center">
+        <div class="search-box">
+          <input type="text" id="searchInput" data-i18n-placeholder="search" placeholder="Szukaj...">
+        </div>
+      </div>
+      <div class="header-right">
+        <span class="sort-group">
+          <button class="btn btn-sm btn-ghost" id="sortDirBtn"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></svg></button>
+          <div class="sort-dropdown" id="sortDropdown">
+            <button class="sort-dropdown-trigger" id="sortFieldTrigger">
+              <span id="sortFieldLabel">Name</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 9l6 6l6 -6"/></svg>
+            </button>
+            <div class="sort-dropdown-menu" id="sortDropdownMenu">
+              <button class="sort-dropdown-option" data-value="name" data-i18n="fieldName">Name</button>
+              <button class="sort-dropdown-option" data-value="host" data-i18n="fieldHost">Host</button>
+              <button class="sort-dropdown-option" data-value="protocol" data-i18n="fieldProtocol">Protocol</button>
+            </div>
+          </div>
+        </span>
+        <button class="btn btn-sm btn-ghost header-btn" id="quickConnectBtn" data-i18n-title="quickConnect">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M13 3l0 7l6 0l-8 11l0 -7l-6 0l8 -11"/></svg>
+        </button>
+        <button class="btn btn-sm btn-primary header-btn" id="addConnBtn" data-i18n-title="newConnection">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 5l0 14"/><path d="M5 12l14 0"/></svg>
+        </button>
+        <button class="btn btn-sm btn-ghost header-btn" id="addGroupBtn" data-i18n-title="newGroup">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 19h-7a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2h4l3 3h7a2 2 0 0 1 2 2v3.5"/><path d="M16 19h6"/><path d="M19 16v6"/></svg>
+        </button>
+        <button class="btn btn-sm btn-ghost header-btn" id="pingAllBtn" data-i18n-title="pingAll">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 10l4 4"/><path d="M4 12a8 8 0 1 0 16 0a8 8 0 0 0 -16 0"/></svg>
+        </button>
+        <button class="btn btn-sm btn-ghost header-btn" id="settingsBtn" data-i18n-title="settings">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.066 2.573c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.573 1.066c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.066 -2.573c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c.996 .608 2.296 .07 2.572 -1.065z"/><path d="M15 12a3 3 0 1 0 -6 0a3 3 0 0 0 6 0"/></svg>
+        </button>
+      </div>
+      <div class="titlebar-controls">
+        <button class="titlebar-btn" id="minBtn" title="Minimize">
+          <svg width="12" height="12" viewBox="0 0 12 12"><rect x="1" y="5.5" width="10" height="1" fill="currentColor"/></svg>
+        </button>
+        <button class="titlebar-btn" id="maxBtn" title="Maximize">
+          <svg width="12" height="12" viewBox="0 0 12 12"><rect x="1.5" y="1.5" width="9" height="9" rx="1" fill="none" stroke="currentColor" stroke-width="1"/></svg>
+        </button>
+        <button class="titlebar-btn titlebar-btn-close" id="closeBtn" title="Close">
+          <svg width="12" height="12" viewBox="0 0 12 12"><path d="M1 1l10 10M11 1l-10 10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="main-content" id="mainContent"></main>
+
+    <div class="modal-overlay" id="connectionModal">
+      <div class="modal">
+        <div class="modal-header">
+          <h3 id="connectionModalTitle" data-i18n="newConnection">New Connection</h3>
+          <button class="btn-icon modal-close">&times;</button>
+        </div>
+        <div class="modal-scroll">
+          <form id="connectionForm">
+            <input type="hidden" id="connectionId">
+            <div class="form-group">
+              <label for="connName" data-i18n="name">Name</label>
+              <input type="text" id="connName" required>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="connProtocol" data-i18n="protocol">Protocol</label>
+                <select id="connProtocol">
+                  <option value="ssh">SSH</option>
+                  <option value="rdp">RDP</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="connPort" data-i18n="port">Port</label>
+                <input type="number" id="connPort" value="22">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="connHost" data-i18n="host">Host</label>
+              <input type="text" id="connHost" required>
+            </div>
+            <div class="form-group">
+              <label for="connUsername" data-i18n="username">Username</label>
+              <input type="text" id="connUsername" required>
+            </div>
+            <div class="form-group">
+              <label for="connAuthType" data-i18n="authType">Authentication</label>
+              <select id="connAuthType">
+                <option value="password" data-i18n="password">Password</option>
+                <option value="key" data-i18n="privateKey">Private Key</option>
+              </select>
+            </div>
+            <div class="form-group" id="passwordGroup">
+              <label for="connPassword" data-i18n="password">Password</label>
+              <div class="password-wrapper">
+                <input type="password" id="connPassword">
+                <button type="button" class="btn-eye" id="togglePassword" tabindex="-1" data-tooltip="Pokaż/ukryj hasło" aria-label="Pokaż/ukryj hasło"></button>
+              </div>
+            </div>
+            <div class="form-group" id="keyGroup" style="display:none">
+              <label for="connKeyPath" data-i18n="privateKey">Private Key Path</label>
+              <input type="text" id="connKeyPath">
+            </div>
+            <div class="form-group">
+              <label for="connGroup" data-i18n="group">Group</label>
+              <select id="connGroup"><option value="" data-i18n="none">None</option></select>
+            </div>
+            <div class="form-group">
+              <label for="connTags" data-i18n="tags">Tags (comma separated)</label>
+              <input type="text" id="connTags" list="tagSuggestions" placeholder="type to search, comma to separate">
+              <datalist id="tagSuggestions"></datalist>
+            </div>
+          </form>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary modal-close" data-i18n="cancel">Cancel</button>
+          <button type="submit" form="connectionForm" class="btn btn-primary" data-i18n="save">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="groupModal">
+      <div class="modal modal-sm">
+        <div class="modal-header">
+          <h3 id="groupModalTitle" data-i18n="newGroup">New Group</h3>
+          <button class="btn-icon modal-close">&times;</button>
+        </div>
+        <div class="modal-scroll">
+          <form id="groupForm">
+            <input type="hidden" id="groupId">
+            <div class="form-group">
+              <label for="groupName" data-i18n="groupName">Group Name</label>
+              <input type="text" id="groupName" required>
+            </div>
+            <div class="form-group">
+              <label for="groupColor" data-i18n="groupColor">Color</label>
+              <div class="color-picker">
+                <input type="color" id="groupColor" value="#9DD99A">
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary modal-close" data-i18n="cancel">Cancel</button>
+          <button type="submit" form="groupForm" class="btn btn-primary" data-i18n="save">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="settingsModal">
+      <div class="modal modal-lg">
+        <div class="modal-header">
+          <h3 id="settingsTitle" data-i18n="settings">Settings</h3>
+          <button class="btn-icon modal-close">&times;</button>
+        </div>
+        <div class="modal-scroll">
+          <div class="form-group">
+            <label data-i18n="ui">UI</label>
+            <div class="settings-ui-row">
+              <div>
+                <label class="settings-ui-label" data-i18n="language">Language</label>
+                <select id="settingsLang">
+                  <option value="pl">Polski</option>
+                  <option value="en">English</option>
+                </select>
+              </div>
+              <div>
+                <label class="settings-ui-label" data-i18n="theme">Theme</label>
+                <select id="settingsTheme">
+                  <option value="dark" data-i18n="dark">Dark</option>
+                  <option value="light" data-i18n="light">Light</option>
+                </select>
+              </div>
+              <div>
+                <label class="settings-ui-label" data-i18n="scale">Scale</label>
+                <input type="number" id="settingsUiScale" min="0.25" max="3" step="0.05" value="1">
+              </div>
+            </div>
+          </div>
+          <div class="settings-row-2col">
+            <div class="settings-checkboxes">
+              <label class="checkbox-group"><input type="checkbox" id="settingsStartWithSystem"> <span data-i18n="startWithSystem">Start with system</span></label>
+              <label class="checkbox-group"><input type="checkbox" id="settingsStartMinimized"> <span data-i18n="startMinimized">Start minimized</span></label>
+              <label class="checkbox-group"><input type="checkbox" id="settingsCloseToTray"> <span data-i18n="closeToTray">Close to tray</span></label>
+            </div>
+            <div class="form-group">
+              <label data-i18n="importExport">Import / Export</label>
+              <div style="display:flex; gap:8px">
+                <button class="btn btn-secondary" id="exportBtn" data-i18n="export">Export</button>
+                <button class="btn btn-secondary" id="importBtn" data-i18n="import">Import</button>
+              </div>
+            </div>
+          </div>
+          <hr>
+          <div class="form-group">
+            <label data-i18n="shortcuts">Shortcuts</label>
+            <div class="shortcuts-list">
+              <span><kbd>Ctrl+N</kbd> <span data-i18n="shortcutNewConnection">New connection</span></span>
+              <span><kbd>Ctrl+F</kbd> <span data-i18n="shortcutSearch">Search</span></span>
+              <span><kbd>Ctrl+Q</kbd> <span data-i18n="shortcutQuickConnect">Quick Connect</span></span>
+              <span><kbd>Ctrl+S</kbd> <span data-i18n="shortcutSaveSettings">Save settings</span></span>
+              <span><kbd>Esc</kbd> <span data-i18n="shortcutCloseModal">Close modal</span></span>
+              <span><kbd data-i18n="shortcutDblclick">Double-click</kbd> <span data-i18n="shortcutConnect">Connect to host</span></span>
+            </div>
+          </div>
+          <hr>
+          <div class="form-group">
+            <label data-i18n="tagManager">Tag manager</label>
+            <div id="tagManagerList"></div>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary modal-close" data-i18n="cancel">Cancel</button>
+          <button class="btn btn-primary" id="saveSettingsBtn" data-i18n="save">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="confirmModal">
+      <div class="modal modal-sm">
+        <div class="modal-header">
+          <h3 id="confirmTitle" data-i18n="confirm">Confirm</h3>
+          <button class="btn-icon modal-close">&times;</button>
+        </div>
+        <div class="modal-scroll">
+          <p id="confirmMessage"></p>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary modal-close" data-i18n="no">No</button>
+          <button type="button" class="btn btn-primary" id="confirmYes" data-i18n="yes">Yes</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="quickConnectModal">
+      <div class="modal modal-sm">
+        <div class="modal-header">
+          <h3 id="quickConnectTitle" data-i18n="quickConnect">Quick Connect</h3>
+          <button class="btn-icon modal-close">&times;</button>
+        </div>
+        <div class="modal-scroll">
+          <form id="qcForm">
+            <div class="form-group">
+              <label for="qcHost">Host</label>
+              <input type="text" id="qcHost" required placeholder="hostname or IP">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="qcProtocol">Protocol</label>
+                <select id="qcProtocol">
+                  <option value="ssh">SSH</option>
+                  <option value="rdp">RDP</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="qcPort">Port</label>
+                <input type="number" id="qcPort" value="22">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="qcUsername">Username</label>
+              <input type="text" id="qcUsername" placeholder="root">
+            </div>
+          </form>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary modal-close" data-i18n="cancel">Cancel</button>
+          <button type="submit" form="qcForm" class="btn btn-primary" data-i18n="connect">Connect</button>
+        </div>
+      </div>
+    </div>
+
+    <input type="file" id="importFileInput" accept=".json" style="display:none">
+
+    <div class="toast-container" id="toastContainer"></div>
+    <div class="tooltip" id="tooltip"></div>
+  </div>
+
+  <script src="/js/i18n.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>
