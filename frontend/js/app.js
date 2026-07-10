@@ -640,7 +640,7 @@ document.getElementById("importFileInput").addEventListener("change", async (e) 
     const result = await API.importData(data)
     showToast(t("importSuccess", { imported: result.imported, total: result.total }), "success")
     await loadData()
-  } catch (err) { showToast(err?.message ?? err || t("importFailed") || "Import failed", "error") }
+  } catch (err) { showToast((err?.message ?? err) || "Import failed", "error") }
 })
 
 // ─── QUICK CONNECT ───────────────────────────────
