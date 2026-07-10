@@ -1,6 +1,7 @@
 use crate::crypto;
 use crate::models::*;
 use rusqlite::{params, Connection as SqlConn, Result as SqlResult};
+use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Mutex;
 
@@ -384,19 +385,111 @@ impl Database {
         Ok(ExportData { connections, groups })
     }
 
+    fn get_group_by_id(&self, id: &str) -> SqlResult<Option<Group>> {
+        let conn = self.conn.lock().unwrap();
+        let mut stmt = conn.prepare(
+            "SELECT id, name, color, sort_order, created_at, updated_at FROM groups_t WHERE id = ?1",
+        )?;
+        let mut rows = stmt.query_map(params![id], |row| {
+            Ok(Group {
+                id: row.get(0)?,
+                name: row.get(1)?,
+                color: row.get(2)?,
+                sort_order: row.get(3)?,
+                created_at: row.get(4)?,
+                updated_at: row.get(5)?,
+            })
+        })?;
+        rows.next().transpose()
+    }
+
+    fn get_group_by_name(&self, name: &str) -> SqlResult<Option<Group>> {
+        let conn = self.conn.lock().unwrap();
+        let mut stmt = conn.prepare(
+            "SELECT id, name, color, sort_order, created_at, updated_at FROM groups_t WHERE name = ?1",
+        )?;
+        let mut rows = stmt.query_map(params![name], |row| {
+            Ok(Group {
+                id: row.get(0)?,
+                name: row.get(1)?,
+                color: row.get(2)?,
+                sort_order: row.get(3)?,
+                created_at: row.get(4)?,
+                updated_at: row.get(5)?,
+            })
+        })?;
+        rows.next().transpose()
+    }
+
+    fn get_connection_by_host_port_protocol_username(
+        &self,
+        host: &str,
+        port: u16,
+        protocol: &str,
+        username: &str,
+    ) -> SqlResult<Option<ConnEntry>> {
+        let conn = self.conn.lock().unwrap();
+        let mut stmt = conn.prepare(
+            "SELECT id, name, host, port, username, protocol, auth_type, password_enc, private_key_path, group_id, tags, sort_order, created_at, updated_at, favorite FROM connections WHERE host = ?1 AND port = ?2 AND protocol = ?3 AND username = ?4",
+        )?;
+        let mut rows = stmt.query_map(params![host, port, protocol, username], |row| {
+            Self::row_to_entry(row)
+        })?;
+        rows.next().transpose()
+    }
+
     pub fn import_data(&self, data: ImportData) -> SqlResult<ImportResult> {
         let total = data.connections.len() + data.groups.len();
         let mut imported = 0;
+        let mut group_id_map: HashMap<String, String> = HashMap::new();
+
         for g in &data.groups {
-            if self.create_group(GroupInput {
-                name: g.name.clone(),
-                color: Some(g.color.clone()),
-            }).is_ok() {
+            let existing = self
+                .get_group_by_id(&g.id)
+                .ok()
+                .flatten()
+                .or_else(|| self.get_group_by_name(&g.name).ok().flatten());
+
+            let result = if let Some(group) = existing {
+                self.update_group(&group.id, GroupInput {
+                    name: g.name.clone(),
+                    color: Some(g.color.clone()),
+                })
+                .map(|_| group.id.clone())
+            } else {
+                self.create_group(GroupInput {
+                    name: g.name.clone(),
+                    color: Some(g.color.clone()),
+                })
+                .map(|group| group.id)
+            };
+
+            if let Ok(new_id) = result {
+                group_id_map.insert(g.id.clone(), new_id);
                 imported += 1;
             }
         }
+
         for c in &data.connections {
-            if self.create_connection(ConnEntryInput {
+            let existing = self
+                .get_entry(&c.id)
+                .ok()
+                .flatten()
+                .or_else(|| {
+                    self.get_connection_by_host_port_protocol_username(
+                        &c.host, c.port, &c.protocol, &c.username,
+                    )
+                    .ok()
+                    .flatten()
+                });
+
+            let resolved_group_id = c
+                .group_id
+                .as_ref()
+                .and_then(|gid| group_id_map.get(gid).cloned())
+                .or_else(|| c.group_id.clone());
+
+            let input = ConnEntryInput {
                 name: c.name.clone(),
                 host: c.host.clone(),
                 port: c.port,
@@ -405,12 +498,21 @@ impl Database {
                 auth_type: c.auth_type.clone(),
                 password: c.password.clone(),
                 private_key_path: c.private_key_path.clone(),
-                group_id: c.group_id.clone(),
+                group_id: resolved_group_id,
                 tags: c.tags.clone(),
-            }).is_ok() {
-                imported += 1;
+            };
+
+            if let Some(conn) = existing {
+                if self.update_connection(&conn.id, input).is_ok() {
+                    imported += 1;
+                }
+            } else {
+                if self.create_connection(input).is_ok() {
+                    imported += 1;
+                }
             }
         }
+
         Ok(ImportResult { imported, total })
     }
 }
