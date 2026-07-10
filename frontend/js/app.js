@@ -633,10 +633,14 @@ document.getElementById("importFileInput").addEventListener("change", async (e) 
   try {
     const text = await file.text()
     const data = JSON.parse(text)
+    if (!data.connections || !data.groups) {
+      showToast(t("importInvalidFormat") || "Invalid import file format", "error")
+      return
+    }
     const result = await API.importData(data)
     showToast(t("importSuccess", { imported: result.imported, total: result.total }), "success")
     await loadData()
-  } catch (err) { showToast(err.message, "error") }
+  } catch (err) { showToast(err?.message ?? err || t("importFailed") || "Import failed", "error") }
 })
 
 // ─── QUICK CONNECT ───────────────────────────────
