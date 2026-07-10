@@ -442,6 +442,7 @@ impl Database {
         let total = data.connections.len() + data.groups.len();
         let mut imported = 0;
         let mut group_id_map: HashMap<String, String> = HashMap::new();
+        let mut group_name_map: HashMap<String, String> = HashMap::new();
 
         for g in &data.groups {
             let existing = self
@@ -465,7 +466,8 @@ impl Database {
             };
 
             if let Ok(new_id) = result {
-                group_id_map.insert(g.id.clone(), new_id);
+                group_id_map.insert(g.id.clone(), new_id.clone());
+                group_name_map.insert(g.name.clone(), new_id);
                 imported += 1;
             }
         }
@@ -487,6 +489,11 @@ impl Database {
                 .group_id
                 .as_ref()
                 .and_then(|gid| group_id_map.get(gid).cloned())
+                .or_else(|| {
+                    c.group_id
+                        .as_ref()
+                        .and_then(|gid| group_name_map.get(gid).cloned())
+                })
                 .or_else(|| c.group_id.clone());
 
             let input = ConnEntryInput {
@@ -504,6 +511,9 @@ impl Database {
 
             if let Some(conn) = existing {
                 if self.update_connection(&conn.id, input).is_ok() {
+                    if c.favorite && !conn.favorite {
+                        self.set_favorite(&conn.id, true).ok();
+                    }
                     imported += 1;
                 }
             } else {

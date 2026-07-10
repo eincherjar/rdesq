@@ -128,9 +128,52 @@ pub struct ExportData {
     pub groups: Vec<Group>,
 }
 
+fn default_id() -> String {
+    uuid::Uuid::new_v4().to_string()
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ImportConnEntry {
+    #[serde(default = "default_id")]
+    pub id: String,
+    pub name: String,
+    pub host: String,
+    pub port: u16,
+    pub username: String,
+    pub protocol: String,
+    pub auth_type: String,
+    #[serde(default)]
+    pub password: Option<String>,
+    #[serde(default)]
+    pub private_key_path: Option<String>,
+    #[serde(default)]
+    pub group_id: Option<String>,
+    #[serde(default)]
+    pub tags: Vec<String>,
+    #[serde(default)]
+    pub favorite: bool,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ImportGroup {
+    #[serde(default = "default_id")]
+    pub id: String,
+    pub name: String,
+    #[serde(default = "default_group_color")]
+    pub color: String,
+}
+
+fn default_group_color() -> String {
+    "#9DD99A".into()
+}
+
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ImportData {
-    pub connections: Vec<ConnEntry>,
-    pub groups: Vec<Group>,
+    #[serde(default)]
+    pub connections: Vec<ImportConnEntry>,
+    #[serde(default)]
+    pub groups: Vec<ImportGroup>,
 }

@@ -610,6 +610,28 @@ async function saveSettings() {
   } catch (err) { showToast(err.message, "error") }
 }
 
+function downloadSampleImport() {
+  const sample = {
+    groups: [
+      { name: "Serwery", color: "#9DD99A" },
+      { name: "Bazy danych", color: "#5DA6EA" },
+    ],
+    connections: [
+      { name: "Serwer WWW", host: "192.168.1.10", port: 22, username: "root", protocol: "ssh", authType: "password", tags: ["www", "prod"] },
+      { name: "Baza MySQL", host: "db.example.com", port: 22, username: "admin", protocol: "ssh", authType: "key", privateKeyPath: "/home/user/.ssh/id_rsa", groupId: "Bazy danych" },
+      { name: "Pulpit zdalny", host: "10.0.0.5", port: 3389, username: "admin", protocol: "rdp", authType: "password", groupId: "Serwery" },
+    ],
+  }
+  const json = JSON.stringify(sample, null, 2)
+  const blob = new Blob([json], { type: "application/json" })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement("a")
+  a.href = url
+  a.download = "rdesq-sample-import.json"
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 async function exportData() {
   try {
     const data = JSON.stringify(await API.exportData(), null, 2)
@@ -729,6 +751,7 @@ function init() {
   document.getElementById("saveSettingsBtn").addEventListener("click", saveSettings)
   document.getElementById("exportBtn").addEventListener("click", exportData)
   document.getElementById("importBtn").addEventListener("click", importData)
+  document.getElementById("sampleBtn").addEventListener("click", downloadSampleImport)
   document.getElementById("qcForm").addEventListener("submit", saveQuickConnect)
 
   // toggle password visibility
