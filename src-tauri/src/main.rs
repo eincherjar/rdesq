@@ -3,8 +3,9 @@
 fn main() {
     #[cfg(target_os = "linux")]
     {
-        // Disable DMABUF / compositing to avoid WebKitWebProcess GPU crashes
         std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+        std::env::set_var("WEBKIT_DISABLE_COMPOSITING_MODE", "1");
+        std::env::set_var("LIBGL_ALWAYS_SOFTWARE", "1");
     }
     rdesq::run()
 }
