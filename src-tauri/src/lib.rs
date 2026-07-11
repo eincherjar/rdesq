@@ -78,6 +78,11 @@ pub fn run() {
                 let _ = app.autolaunch().enable();
             }
 
+            #[cfg(target_os = "linux")]
+            if let Some(w) = app.get_webview_window("main") {
+                let _ = w.set_decorations(true);
+            }
+
             Ok(())
         })
         .on_window_event(move |window, event| {

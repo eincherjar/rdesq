@@ -40,6 +40,18 @@ export DESKTOP ICON APPDIR
 export DEPLOY_OPENGL=1
 bash "$QUICK_SHARUN" "$BINARY"
 
+# Bundle sshpass for password-based SSH connections
+if command -v sshpass &>/dev/null; then
+  echo "[*] Bundling sshpass..."
+  mkdir -p "$APPDIR/shared/bin"
+  cp "$(command -v sshpass)" "$APPDIR/shared/bin/"
+  ln -sf ../sharun "$APPDIR/bin/sshpass" 2>/dev/null || true
+  for lib in $(ldd "$(command -v sshpass)" 2>/dev/null | grep "=> /" | awk '{print $3}'); do
+    mkdir -p "$APPDIR/lib"
+    cp -n "$lib" "$APPDIR/lib/" 2>/dev/null || true
+  done
+fi
+
 # Step 2: Create AppImage from AppDir
 echo "[*] Creating AppImage with appimagetool..."
 mkdir -p "$OUTDIR"

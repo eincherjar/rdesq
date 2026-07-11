@@ -780,6 +780,7 @@ function init() {
     if (win) {
       appWin = win
       const isWin = navigator.platform.includes("Win")
+      document.body.classList.toggle("platform-win", isWin)
 
       document.getElementById("minBtn").onclick = () => { win.minimize().catch(() => {}) }
       document.getElementById("maxBtn").onclick = () => {

@@ -61,6 +61,9 @@ body {
   position: relative;
 }
 
+body:not(.platform-win) .titlebar-left,
+body:not(.platform-win) .titlebar-controls { display: none; }
+
 /* Header */
 .header {
   height: 32px;

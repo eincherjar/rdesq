@@ -106,16 +106,9 @@ fn launch_ssh(conn: &ConnEntry) -> Result<LaunchResult, String> {
         }
         "password" if !pass.is_empty() => {
             if command_exists("sshpass") {
-                let output = ProcCommand::new("sshpass")
-                    .arg("-p")
-                    .arg(pass)
-                    .arg("ssh")
-                    .args(&args)
-                    .spawn();
-                return match output {
-                    Ok(_) => Ok(LaunchResult { success: true, message: "SSH launched".into() }),
-                    Err(e) => Ok(LaunchResult { success: false, message: format!("Failed to launch SSH: {}", e) }),
-                };
+                let mut full = vec!["-p", pass, "ssh"];
+                full.extend(args.iter().copied());
+                return launch_in_terminal("sshpass", &full);
             }
             return Ok(LaunchResult {
                 success: false,
@@ -125,9 +118,52 @@ fn launch_ssh(conn: &ConnEntry) -> Result<LaunchResult, String> {
         _ => {}
     }
 
-    let output = ProcCommand::new("ssh").args(&args).spawn();
-    match output {
+    launch_in_terminal("ssh", &args)
+}
+
+#[cfg(target_os = "windows")]
+fn launch_in_terminal(program: &str, args: &[&str]) -> Result<LaunchResult, String> {
+    match ProcCommand::new(program).args(args).spawn() {
         Ok(_) => Ok(LaunchResult { success: true, message: "SSH launched".into() }),
+        Err(e) => Ok(LaunchResult { success: false, message: format!("Failed to launch SSH: {}", e) }),
+    }
+}
+
+#[cfg(not(target_os = "windows"))]
+fn launch_in_terminal(program: &str, args: &[&str]) -> Result<LaunchResult, String> {
+    let terminals = ["konsole", "gnome-terminal", "xfce4-terminal", "x-terminal-emulator", "xterm"];
+    let mut term_found = None;
+    for &t in &terminals {
+        if command_exists(t) {
+            term_found = Some(t);
+            break;
+        }
+    }
+
+    if let Some(term) = term_found {
+        let mut cmd = ProcCommand::new(term);
+        match term {
+            "konsole" => {
+                cmd.arg("--hold").arg("-e").arg(program);
+            }
+            "gnome-terminal" => {
+                cmd.arg("--").arg(program);
+            }
+            _ => {
+                cmd.arg("-hold").arg("-e").arg(program);
+            }
+        }
+        for a in args {
+            cmd.arg(a);
+        }
+        return match cmd.spawn() {
+            Ok(_) => Ok(LaunchResult { success: true, message: "SSH launched".into() }),
+            Err(e) => Ok(LaunchResult { success: false, message: format!("Failed to launch terminal: {}", e) }),
+        };
+    }
+
+    match ProcCommand::new(program).args(args).spawn() {
+        Ok(_) => Ok(LaunchResult { success: true, message: "SSH launched (no terminal)".into() }),
         Err(e) => Ok(LaunchResult { success: false, message: format!("Failed to launch SSH: {}", e) }),
     }
 }
