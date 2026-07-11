@@ -26,11 +26,6 @@ pub fn run() {
             let settings = database.get_settings();
             app.manage(database);
 
-            #[cfg(target_os = "linux")]
-            if let Some(window) = app.get_webview_window("main") {
-                let _ = window.set_decorations(true);
-            }
-
             let lang = &settings.lang;
             let (show_text, quit_text) = if lang == "pl" {
                 ("Pokaż", "Zakończ")

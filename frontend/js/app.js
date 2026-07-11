@@ -781,22 +781,17 @@ function init() {
       appWin = win
       const isWin = navigator.platform.includes("Win")
 
-      if (isWin) {
-        document.getElementById("minBtn").onclick = () => { win.minimize().catch(() => {}) }
-        document.getElementById("maxBtn").onclick = () => {
-          win.isMaximized().then(max => {
-            if (max) { win.unmaximize().catch(() => {}) } else { win.maximize().catch(() => {}) }
-          }).catch(() => {})
-        }
-        document.getElementById("closeBtn").onclick = () => { win.close().catch(() => {}) }
-        document.querySelector(".header").addEventListener("mousedown", (e) => {
-          if (e.target.closest("button,input,select,textarea,.titlebar-controls")) return
-          win.startDragging().catch(() => {})
-        })
-      } else {
-        document.querySelector(".titlebar-left")?.remove()
-        document.querySelector(".titlebar-controls")?.remove()
+      document.getElementById("minBtn").onclick = () => { win.minimize().catch(() => {}) }
+      document.getElementById("maxBtn").onclick = () => {
+        win.isMaximized().then(max => {
+          if (max) { win.unmaximize().catch(() => {}) } else { win.maximize().catch(() => {}) }
+        }).catch(() => {})
       }
+      document.getElementById("closeBtn").onclick = () => { win.close().catch(() => {}) }
+      document.querySelector(".header").addEventListener("mousedown", (e) => {
+        if (e.target.closest("button,input,select,textarea,.titlebar-controls")) return
+        win.startDragging().catch(() => {})
+      })
 
       // ── window state persistence ──
       const K = "rdesq_win"
