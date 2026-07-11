@@ -65,13 +65,9 @@ async function loadData() {
     render()
     pingHosts(connections)
 
-    if (appWin) {
-      if (settings.startMinimized) {
-        appWin.minimize().catch(() => {})
-      } else {
-        appWin.show().catch(() => {})
-        appWin.setFocus().catch(() => {})
-      }
+    if (appWin && !settings.startMinimized) {
+      appWin.show().catch(() => {})
+      appWin.setFocus().catch(() => {})
     }
   } catch (err) {
     showToast(err.message, "error")
@@ -783,21 +779,27 @@ function init() {
 
     if (win) {
       appWin = win
+      const isWin = navigator.platform.includes("Win")
 
-      document.getElementById('minBtn').onclick = () => { win.minimize().catch(() => {}) }
-      document.getElementById('maxBtn').onclick = () => {
-        win.isMaximized().then(max => {
-          if (max) { win.unmaximize().catch(() => {}) } else { win.maximize().catch(() => {}) }
-        }).catch(() => {})
+      if (isWin) {
+        document.getElementById("minBtn").onclick = () => { win.minimize().catch(() => {}) }
+        document.getElementById("maxBtn").onclick = () => {
+          win.isMaximized().then(max => {
+            if (max) { win.unmaximize().catch(() => {}) } else { win.maximize().catch(() => {}) }
+          }).catch(() => {})
+        }
+        document.getElementById("closeBtn").onclick = () => { win.close().catch(() => {}) }
+        document.querySelector(".header").addEventListener("mousedown", (e) => {
+          if (e.target.closest("button,input,select,textarea,.titlebar-controls")) return
+          win.startDragging().catch(() => {})
+        })
+      } else {
+        document.querySelector(".titlebar-left")?.remove()
+        document.querySelector(".titlebar-controls")?.remove()
       }
-      document.getElementById('closeBtn').onclick = () => { win.close().catch(() => {}) }
-      document.querySelector('.header').addEventListener('mousedown', (e) => {
-        if (e.target.closest('button,input,select,textarea,.titlebar-controls')) return
-        win.startDragging().catch(() => {})
-      })
 
       // ── window state persistence ──
-      const K = 'rdesq_win'
+      const K = "rdesq_win"
       let lastState = null
 
       const saveState = () => {
@@ -809,13 +811,14 @@ function init() {
       }
 
       let rsTimer
-      window.addEventListener('resize', () => { clearTimeout(rsTimer); rsTimer = setTimeout(saveState, 300) })
+      window.addEventListener("resize", () => { clearTimeout(rsTimer); rsTimer = setTimeout(saveState, 300) })
       setInterval(saveState, 3000)
 
-      const closeBtn = document.getElementById('closeBtn')
-      closeBtn.onclick = () => {
-        if (lastState) { try { localStorage.setItem(K, JSON.stringify(lastState)) } catch (_) {} }
-        win.close().catch(() => {})
+      if (isWin) {
+        document.getElementById("closeBtn").onclick = () => {
+          if (lastState) { try { localStorage.setItem(K, JSON.stringify(lastState)) } catch (_) {} }
+          win.close().catch(() => {})
+        }
       }
 
       const restoreState = () => {
@@ -823,10 +826,10 @@ function init() {
           const raw = localStorage.getItem(K)
           if (!raw) return
           const s = JSON.parse(raw)
-          if (typeof s.w !== 'number' || s.w < 100 || s.h < 100) return
+          if (typeof s.w !== "number" || s.w < 100 || s.h < 100) return
           const PS = window.__TAURI__.window.PhysicalSize
           const PP = window.__TAURI__.window.PhysicalPosition
-          if (typeof PS !== 'function' || typeof PP !== 'function') return
+          if (typeof PS !== "function" || typeof PP !== "function") return
           const ops = [win.setSize(new PS(s.w, s.h))]
           if (s.x != null && s.y != null) ops.push(win.setPosition(new PP(s.x, s.y)))
           Promise.all(ops).then(() => {
