@@ -6,7 +6,7 @@ mod ping;
 
 use db::Database;
 use std::path::PathBuf;
-use std::sync::atomic::{AtomicBool, Ordering};
+
 use tauri::{
     image::Image,
     menu::{MenuBuilder, MenuItemBuilder},
@@ -17,9 +17,6 @@ use tauri_plugin_autostart::ManagerExt;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let hidden_by_tray = std::sync::Arc::new(AtomicBool::new(false));
-    let hbt_window = hidden_by_tray.clone();
-
     tauri::Builder::default()
         .plugin(tauri_plugin_autostart::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
@@ -43,8 +40,6 @@ pub fn run() {
             let icon = Image::from_bytes(include_bytes!("../icons/32x32.png"))
                 .expect("failed to load tray icon");
 
-            let hbt_tray = hidden_by_tray.clone();
-            let hbt_menu = hidden_by_tray.clone();
             TrayIconBuilder::new()
                 .icon(icon)
                 .menu(&menu)
@@ -56,20 +51,17 @@ pub fn run() {
                         ..
                     } = event {
                         if let Some(window) = tray.app_handle().get_webview_window("main") {
-                            if hbt_tray.load(Ordering::Relaxed) {
-                                hbt_tray.store(false, Ordering::Relaxed);
+                            if window.is_visible().unwrap_or(true) {
+                                let _ = window.hide();
+                            } else {
                                 let _ = window.show();
                                 let _ = window.set_focus();
-                            } else {
-                                hbt_tray.store(true, Ordering::Relaxed);
-                                let _ = window.hide();
                             }
                         }
                     }
                 })
                 .on_menu_event(move |app, event| match event.id().as_ref() {
                     "show" => {
-                        hbt_menu.store(false, Ordering::Relaxed);
                         if let Some(window) = app.get_webview_window("main") {
                             let _ = window.show();
                             let _ = window.set_focus();
@@ -81,8 +73,6 @@ pub fn run() {
                     _ => {}
                 })
                 .build(app)?;
-
-            // window.show() is called from JS after restoring saved state
 
             if settings.start_with_system {
                 let _ = app.autolaunch().enable();
@@ -96,7 +86,6 @@ pub fn run() {
                     let settings = database.get_settings();
                     if settings.close_to_tray {
                         api.prevent_close();
-                        hbt_window.store(true, Ordering::Relaxed);
                         let _ = window.hide();
                         return;
                     }
