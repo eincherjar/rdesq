@@ -22,7 +22,7 @@ SHARUN_BIN="$APPDIR/sharun"
 if [ ! -f "$SHARUN_BIN" ]; then
   echo "[*] Downloading sharun..."
   wget -qO "$SHARUN_BIN" \
-    "https://github.com/pkgforge-dev/sharun/releases/latest/download/sharun-allinone-$ARCH"
+    "https://github.com/pkgforge-dev/Anylinux-sharun/releases/latest/download/sharun-$ARCH"
   chmod +x "$SHARUN_BIN"
 fi
 
@@ -57,7 +57,7 @@ fi
 echo "[*] Downloading appimagetool..."
 APPIMAGETOOL="$APPDIR/appimagetool"
 wget -qO "$APPIMAGETOOL" \
-  "https://github.com/AppImage/AppImageKit/releases/latest/download/appimagetool-$ARCH.AppImage"
+  "https://github.com/AppImage/appimagetool/releases/latest/download/appimagetool-$ARCH.AppImage"
 chmod +x "$APPIMAGETOOL" || true
 
 if ! "$APPIMAGETOOL" --help >/dev/null 2>&1; then
@@ -71,7 +71,7 @@ echo "[*] Creating AppImage..."
 OUTDIR="$RELEASE_DIR/bundle/appimage"
 mkdir -p "$OUTDIR"
 OUTPUT="$OUTDIR/${APP}_${VERSION}_${ARCH}.AppImage"
-ARCH="$ARCH" "$APPIMAGETOOL" --no-appstream "$APPDIR" "$OUTPUT"
+ARCH="$ARCH" "$APPIMAGETOOL" "$APPDIR" "$OUTPUT"
 
 echo "[+] AppImage created: $OUTPUT"
 ls -lh "$OUTPUT"

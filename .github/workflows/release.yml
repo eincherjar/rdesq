@@ -53,7 +53,7 @@ jobs:
       - name: Install system dependencies
         run: |
           dnf install -y git curl gcc gcc-c++ make perl which \
-            libwebkit2gtk4.1-devel libappindicator-gtk3-devel \
+            webkit2gtk4.1-devel libappindicator-gtk3-devel \
             librsvg2-devel patchelf gtk3-devel libsoup3-devel \
             javascriptcoregtk4.1-devel openssl-devel libxdo-devel \
             file jq
