@@ -65,9 +65,13 @@ async function loadData() {
     render()
     pingHosts(connections)
 
-    if (appWin && !settings.startMinimized) {
-      appWin.show().catch(() => {})
-      appWin.setFocus().catch(() => {})
+    if (appWin) {
+      if (settings.startMinimized) {
+        appWin.minimize().catch(() => {})
+      } else {
+        appWin.show().catch(() => {})
+        appWin.setFocus().catch(() => {})
+      }
     }
   } catch (err) {
     showToast(err.message, "error")
