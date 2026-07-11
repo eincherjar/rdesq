@@ -27,7 +27,6 @@
     },
     "bundle": {
         "active": true,
-        "category": "Network",
         "shortDescription": "Remote Desktop Manager",
         "targets": ["deb", "rpm", "msi", "nsis"],
         "icon": [
