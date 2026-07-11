@@ -115,11 +115,13 @@ jobs:
 
       - uses: actions/download-artifact@v4
 
-      - name: Collect release files
-        run: find . -type f \( -name '*.deb' -o -name '*.AppImage' -o -name '*.rpm' -o -name '*.msi' -o -name '*.exe' \) > assets.txt
-
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
-          files: assets.txt
+          files: |
+            rdesq-linux/**/*.deb
+            rdesq-linux/**/*.AppImage
+            rdesq-linux-rpm/**/*.rpm
+            rdesq-windows/**/*.msi
+            rdesq-windows/**/*.exe
           generate_release_notes: true
