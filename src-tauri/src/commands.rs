@@ -129,27 +129,50 @@ fn launch_ssh(conn: &ConnEntry) -> Result<LaunchResult, String> {
 fn launch_in_system_terminal(program: &str, args: &[String]) -> Result<LaunchResult, String> {
     #[cfg(target_os = "linux")]
     {
-        // 1. $TERMINAL env var
-        if let Ok(term) = std::env::var("TERMINAL") {
-            if !term.is_empty() && command_exists(&term) {
-                let mut cmd = ProcCommand::new(&term);
-                if term.contains("gnome-terminal") {
-                    cmd.arg("--");
-                } else if term.contains("konsole") {
-                    cmd.arg("--hold").arg("-e");
-                } else {
-                    cmd.arg("-e");
-                }
-                cmd.arg(program);
-                for a in args { cmd.arg(a); }
-                return match cmd.spawn() {
-                    Ok(_) => Ok(LaunchResult { success: true, message: "SSH launched".into() }),
-                    Err(e) => Ok(LaunchResult { success: false, message: format!("Failed to launch terminal: {}", e) }),
-                };
+        fn try_term(term: &str, program: &str, args: &[String]) -> Result<Option<LaunchResult>, String> {
+            if !command_exists(term) { return Ok(None); }
+            let mut cmd = ProcCommand::new(term);
+            match term {
+                "konsole" => { cmd.arg("--hold").arg("-e"); }
+                t if t.contains("gnome-terminal") => { cmd.arg("--"); }
+                _ => { cmd.arg("-e"); }
+            }
+            cmd.arg(program);
+            for a in args { cmd.arg(a); }
+            match cmd.spawn() {
+                Ok(_) => Ok(Some(LaunchResult { success: true, message: "SSH launched".into() })),
+                Err(e) => Ok(Some(LaunchResult { success: false, message: format!("Failed to launch terminal: {}", e) })),
             }
         }
 
-        // 2. x-terminal-emulator (Debian alternatives)
+        let cmd_out = |cmd: &str, args: &[&str]| -> Option<String> {
+            ProcCommand::new(cmd).args(args).output().ok()
+                .filter(|o| o.status.success())
+                .and_then(|o| String::from_utf8(o.stdout).ok())
+                .map(|s| s.trim().to_string())
+        };
+
+        // 1. $TERMINAL env var
+        if let Ok(term) = std::env::var("TERMINAL") {
+            if !term.is_empty() {
+                if let Some(r) = try_term(&term, program, args)? { return Ok(r); }
+            }
+        }
+
+        // 2. KDE default terminal
+        if let Some(term) = cmd_out("kreadconfig5", &["--file", "kdeglobals", "--group", "General", "--key", "TerminalApplication"]) {
+            if let Some(r) = try_term(&term, program, args)? { return Ok(r); }
+        }
+
+        // 3. GNOME default terminal
+        if let Some(term) = cmd_out("gsettings", &["get", "org.gnome.desktop.default-applications.terminal", "exec"]) {
+            let term = term.trim_matches('\'');
+            if !term.is_empty() {
+                if let Some(r) = try_term(term, program, args)? { return Ok(r); }
+            }
+        }
+
+        // 4. x-terminal-emulator (Debian alternatives)
         if command_exists("x-terminal-emulator") {
             let mut cmd = ProcCommand::new("x-terminal-emulator");
             cmd.arg("-e").arg(program);
@@ -159,23 +182,9 @@ fn launch_in_system_terminal(program: &str, args: &[String]) -> Result<LaunchRes
             }
         }
 
-        // 3. Fallback: known terminals
-        let terminals = ["konsole", "gnome-terminal", "xfce4-terminal", "xterm"];
-        for &term in &terminals {
-            if command_exists(term) {
-                let mut cmd = ProcCommand::new(term);
-                match term {
-                    "konsole" => { cmd.arg("--hold").arg("-e"); }
-                    "gnome-terminal" => { cmd.arg("--"); }
-                    _ => { cmd.arg("-e"); }
-                }
-                cmd.arg(program);
-                for a in args { cmd.arg(a); }
-                return match cmd.spawn() {
-                    Ok(_) => Ok(LaunchResult { success: true, message: "SSH launched".into() }),
-                    Err(e) => Ok(LaunchResult { success: false, message: format!("Failed to launch terminal: {}", e) }),
-                };
-            }
+        // 5. Fallback: known terminals
+        for &term in &["konsole", "gnome-terminal", "xfce4-terminal", "xterm"] {
+            if let Some(r) = try_term(term, program, args)? { return Ok(r); }
         }
 
         match ProcCommand::new(program).args(args).spawn() {
