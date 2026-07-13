@@ -424,12 +424,21 @@ body {
   flex-shrink: 0;
 }
 
+.connection-row .conn-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
 .connection-row .row-actions {
   display: flex;
   align-items: center;
   gap: 2px;
   opacity: 0;
   transition: opacity 0.1s;
+  flex-shrink: 0;
 }
 
 .connection-row:hover .row-actions { opacity: 1; }
@@ -927,7 +936,8 @@ html { overflow: hidden; }
 @media (max-width: 480px) {
   .connection-row { flex-wrap: wrap; padding: 6px 8px; }
   .connection-row .conn-name { flex: 0 0 100%; margin-bottom: 2px; }
-  .connection-row .conn-host { max-width: 100%; width: auto; order: 10; padding-left: 0; flex-shrink: 0; }
-  .connection-row .conn-protocol { order: 10; flex-shrink: 0; }
-  .connection-row .row-actions { order: 10; }
+  .connection-row .conn-meta { flex: 1 1 100%; }
+  .connection-row .conn-meta .conn-host { flex: 1; min-width: 0; max-width: none; width: auto; padding-left: 0; }
+  .connection-row .conn-meta .conn-protocol { flex-shrink: 0; }
+  .connection-row .conn-meta .row-actions { flex-shrink: 0; opacity: 1; }
 }

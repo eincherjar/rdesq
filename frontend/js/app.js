@@ -208,14 +208,16 @@ function renderRow(conn) {
   return `<div class="connection-row" data-id="${id}" draggable="true">
     <span class="conn-icon${pingCls}">${icon}</span>
     <span class="conn-name">${esc(conn.name)}</span>
-    <span class="conn-host">${esc(conn.username)}@${esc(conn.host)}:${conn.port}</span>
-    <span class="conn-protocol">${esc(conn.protocol)}</span>
-    <span class="row-actions">
-      <button class="row-btn fav ${conn.favorite ? "active" : ""}" data-action="favorite" data-id="${id}" data-tooltip="${t("favorite")}" aria-label="${t("favorite")}">${conn.favorite ? BOOKMARK_FILLED_ICON : BOOKMARK_ICON}</button>
-      <button class="row-btn play" data-action="connect" data-id="${id}" data-tooltip="${t("connect")}" aria-label="${t("connect")}">${PLAY_ICON}</button>
-      <button class="row-btn" data-action="edit" data-id="${id}" data-tooltip="${t("edit")}" aria-label="${t("edit")}">${PENCIL_ICON}</button>
-      <button class="row-btn" data-action="duplicate" data-id="${id}" data-tooltip="${t("duplicate")}" aria-label="${t("duplicate")}">${COPY_ICON}</button>
-      <button class="row-btn danger" data-action="delete" data-id="${id}" data-tooltip="${t("delete")}" aria-label="${t("delete")}">${TRASH_ICON}</button>
+    <span class="conn-meta">
+      <span class="conn-host">${esc(conn.username)}@${esc(conn.host)}:${conn.port}</span>
+      <span class="conn-protocol">${esc(conn.protocol)}</span>
+      <span class="row-actions">
+        <button class="row-btn fav ${conn.favorite ? "active" : ""}" data-action="favorite" data-id="${id}" data-tooltip="${t("favorite")}" aria-label="${t("favorite")}">${conn.favorite ? BOOKMARK_FILLED_ICON : BOOKMARK_ICON}</button>
+        <button class="row-btn play" data-action="connect" data-id="${id}" data-tooltip="${t("connect")}" aria-label="${t("connect")}">${PLAY_ICON}</button>
+        <button class="row-btn" data-action="edit" data-id="${id}" data-tooltip="${t("edit")}" aria-label="${t("edit")}">${PENCIL_ICON}</button>
+        <button class="row-btn" data-action="duplicate" data-id="${id}" data-tooltip="${t("duplicate")}" aria-label="${t("duplicate")}">${COPY_ICON}</button>
+        <button class="row-btn danger" data-action="delete" data-id="${id}" data-tooltip="${t("delete")}" aria-label="${t("delete")}">${TRASH_ICON}</button>
+      </span>
     </span>
   </div>`
 }
