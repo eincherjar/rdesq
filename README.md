@@ -33,6 +33,21 @@
 
 ---
 
+## Screenshots
+
+![screenshot-1](screenshots/1.png)
+![screenshot-2](screenshots/2.png)
+![screenshot-3](screenshots/3.png)
+![screenshot-4](screenshots/4.png)
+![screenshot-5](screenshots/5.png)
+![screenshot-6](screenshots/6.png)
+![screenshot-7](screenshots/7.png)
+![screenshot-8](screenshots/8.png)
+![screenshot-9](screenshots/9.png)
+![screenshot-10](screenshots/10.png)
+
+---
+
 ## Install
 
 Download the latest release:
