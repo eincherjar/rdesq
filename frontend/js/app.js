@@ -206,8 +206,10 @@ function renderRow(conn) {
   const pingStatus = getPingStatus(conn)
   const pingCls = pingStatus === true ? " online" : pingStatus === false ? " offline" : ""
   return `<div class="connection-row" data-id="${id}" draggable="true">
-    <span class="conn-icon${pingCls}">${icon}</span>
-    <span class="conn-name">${esc(conn.name)}</span>
+    <span class="conn-top">
+      <span class="conn-icon${pingCls}">${icon}</span>
+      <span class="conn-name">${esc(conn.name)}</span>
+    </span>
     <span class="conn-meta">
       <span class="conn-host">${esc(conn.username)}@${esc(conn.host)}:${conn.port}</span>
       <span class="conn-protocol">${esc(conn.protocol)}</span>
