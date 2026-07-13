@@ -562,7 +562,8 @@ body {
 }
 
 .form-group input,
-.form-group select {
+.form-group select,
+.form-group textarea {
   width: 100%;
   padding: 8px 10px;
   background: var(--bg-input);
@@ -574,8 +575,16 @@ body {
   transition: border-color 0.15s;
 }
 
+.form-group textarea {
+  resize: vertical;
+  font-family: inherit;
+  min-height: 60px;
+  line-height: 1.4;
+}
+
 .form-group input:focus,
-.form-group select:focus {
+.form-group select:focus,
+.form-group textarea:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 1px var(--accent);
 }
@@ -838,6 +847,62 @@ html { overflow: hidden; }
   background-clip: content-box;
 }
 
+/* Hamburger */
+.hamburger-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  align-items: center;
+  justify-content: center;
+  -webkit-app-region: no-drag;
+}
+.hamburger-btn:hover { color: var(--text-primary); background: var(--bg-hover); }
+
+.hamburger-dropdown {
+  display: none;
+  position: absolute;
+  top: 32px;
+  left: 0;
+  right: 0;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  padding: 8px;
+  gap: 4px;
+  flex-wrap: wrap;
+  z-index: 100;
+  -webkit-app-region: no-drag;
+}
+.hamburger-dropdown.open { display: flex; }
+
+.hamburger-dropdown .hamburger-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 13px;
+  width: 100%;
+  text-align: left;
+}
+.hamburger-dropdown .hamburger-item:hover { background: var(--bg-hover); }
+.hamburger-dropdown .hamburger-item svg { flex-shrink: 0; }
+
+.hamburger-dropdown .hamburger-sep {
+  width: 100%;
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .header { flex-wrap: nowrap; height: 32px; padding: 0; gap: 4px; }
@@ -848,11 +913,21 @@ html { overflow: hidden; }
   .connection-row .row-actions { opacity: 1; }
 }
 
-@media (max-width: 480px) {
-  .connection-row { flex-wrap: wrap; padding: 6px 8px 6px 20px; }
-  .connection-row .conn-host { max-width: 100%; width: 100%; order: 10; padding-left: 16px; }
-  .connection-row .row-actions { order: 20; }
-  .sort-dropdown { display: none; }
-  #pingAllBtn { display: none; }
+@media (max-width: 600px) {
+  .sort-group,
+  #quickConnectBtn,
+  #addConnBtn,
+  #addGroupBtn,
+  #pingAllBtn,
   #settingsBtn { display: none; }
+
+  .hamburger-btn { display: flex; }
+}
+
+@media (max-width: 480px) {
+  .connection-row { flex-wrap: wrap; padding: 6px 8px; }
+  .connection-row .conn-name { flex: 0 0 100%; margin-bottom: 2px; }
+  .connection-row .conn-host { max-width: 100%; width: auto; order: 10; padding-left: 0; flex-shrink: 0; }
+  .connection-row .conn-protocol { order: 10; flex-shrink: 0; }
+  .connection-row .row-actions { order: 10; }
 }

@@ -38,7 +38,8 @@ impl Database {
                 sort_order INTEGER NOT NULL DEFAULT 0,
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL,
-                favorite INTEGER NOT NULL DEFAULT 0
+                favorite INTEGER NOT NULL DEFAULT 0,
+                notes TEXT NOT NULL DEFAULT ''
             );
             CREATE TABLE IF NOT EXISTS groups_t (
                 id TEXT PRIMARY KEY,
@@ -55,6 +56,8 @@ impl Database {
         )?;
         // migrate existing databases that lack the favorite column
         conn.execute_batch("ALTER TABLE connections ADD COLUMN favorite INTEGER NOT NULL DEFAULT 0")
+            .ok();
+        conn.execute_batch("ALTER TABLE connections ADD COLUMN notes TEXT NOT NULL DEFAULT ''")
             .ok();
         Ok(())
     }
@@ -85,6 +88,7 @@ impl Database {
             },
             group_id: gid,
             tags,
+            notes: row.get(15)?,
             sort_order: row.get(11)?,
             created_at: row.get(12)?,
             updated_at: row.get(13)?,
@@ -95,7 +99,7 @@ impl Database {
     pub fn list_entries(&self) -> SqlResult<Vec<ConnEntry>> {
         let conn = self.conn.lock().unwrap();
         let mut stmt = conn.prepare(
-            "SELECT id, name, host, port, username, protocol, auth_type, password_enc, private_key_path, group_id, tags, sort_order, created_at, updated_at, favorite FROM connections ORDER BY sort_order, name",
+            "SELECT id, name, host, port, username, protocol, auth_type, password_enc, private_key_path, group_id, tags, sort_order, created_at, updated_at, favorite, notes FROM connections ORDER BY sort_order, name",
         )?;
         let rows = stmt.query_map([], |row| Self::row_to_entry(row))?;
         rows.collect()
@@ -104,7 +108,7 @@ impl Database {
     pub fn get_entry(&self, id: &str) -> SqlResult<Option<ConnEntry>> {
         let conn = self.conn.lock().unwrap();
         let mut stmt = conn.prepare(
-            "SELECT id, name, host, port, username, protocol, auth_type, password_enc, private_key_path, group_id, tags, sort_order, created_at, updated_at, favorite FROM connections WHERE id = ?1",
+            "SELECT id, name, host, port, username, protocol, auth_type, password_enc, private_key_path, group_id, tags, sort_order, created_at, updated_at, favorite, notes FROM connections WHERE id = ?1",
         )?;
         let mut rows = stmt.query_map(params![id], |row| Self::row_to_entry(row))?;
         rows.next().transpose()
@@ -127,13 +131,14 @@ impl Database {
         let pwd_enc = input.password.as_deref().map(crypto::encrypt).unwrap_or_default();
         let tags_json = serde_json::to_string(&input.tags).unwrap_or_default();
         let gid = input.group_id.as_deref().unwrap_or("");
+        let notes = input.notes.as_deref().unwrap_or("");
         conn.execute(
-            "INSERT INTO connections (id, name, host, port, username, protocol, auth_type, password_enc, private_key_path, group_id, tags, sort_order, created_at, updated_at, favorite) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15)",
+            "INSERT INTO connections (id, name, host, port, username, protocol, auth_type, password_enc, private_key_path, group_id, tags, sort_order, created_at, updated_at, favorite, notes) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16)",
             params![
                 id, input.name, input.host, input.port, input.username,
                 input.protocol, input.auth_type, pwd_enc,
                 input.private_key_path.as_deref().unwrap_or(""),
-                gid, tags_json, 0, now, now, false
+                gid, tags_json, 0, now, now, false, notes
             ],
         )?;
         drop(conn);
@@ -146,13 +151,14 @@ impl Database {
         let pwd_enc = input.password.as_deref().map(crypto::encrypt).unwrap_or_default();
         let tags_json = serde_json::to_string(&input.tags).unwrap_or_default();
         let gid = input.group_id.as_deref().unwrap_or("");
+        let notes = input.notes.as_deref().unwrap_or("");
         let rows = conn.execute(
-            "UPDATE connections SET name=?1, host=?2, port=?3, username=?4, protocol=?5, auth_type=?6, password_enc=?7, private_key_path=?8, group_id=?9, tags=?10, updated_at=?11 WHERE id=?12",
+            "UPDATE connections SET name=?1, host=?2, port=?3, username=?4, protocol=?5, auth_type=?6, password_enc=?7, private_key_path=?8, group_id=?9, tags=?10, notes=?11, updated_at=?12 WHERE id=?13",
             params![
                 input.name, input.host, input.port, input.username,
                 input.protocol, input.auth_type, pwd_enc,
                 input.private_key_path.as_deref().unwrap_or(""),
-                gid, tags_json, now, id
+                gid, tags_json, notes, now, id
             ],
         )?;
         if rows == 0 { return Ok(None); }
@@ -190,13 +196,13 @@ impl Database {
                 let tags_json = serde_json::to_string(&c.tags).unwrap_or_default();
                 let conn = self.conn.lock().unwrap();
                 conn.execute(
-                    "INSERT INTO connections (id, name, host, port, username, protocol, auth_type, password_enc, private_key_path, group_id, tags, sort_order, created_at, updated_at, favorite) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15)",
+                    "INSERT INTO connections (id, name, host, port, username, protocol, auth_type, password_enc, private_key_path, group_id, tags, sort_order, created_at, updated_at, favorite, notes) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16)",
                     params![
                         new_id, new_name, c.host, c.port, c.username,
                         c.protocol, c.auth_type, pwd_enc,
                         c.private_key_path.as_deref().unwrap_or(""),
                         c.group_id.as_deref().unwrap_or(""),
-                        tags_json, 0, now, now, false
+                        tags_json, 0, now, now, false, c.notes
                     ],
                 )?;
                 drop(conn);
@@ -430,7 +436,7 @@ impl Database {
     ) -> SqlResult<Option<ConnEntry>> {
         let conn = self.conn.lock().unwrap();
         let mut stmt = conn.prepare(
-            "SELECT id, name, host, port, username, protocol, auth_type, password_enc, private_key_path, group_id, tags, sort_order, created_at, updated_at, favorite FROM connections WHERE host = ?1 AND port = ?2 AND protocol = ?3 AND username = ?4",
+            "SELECT id, name, host, port, username, protocol, auth_type, password_enc, private_key_path, group_id, tags, sort_order, created_at, updated_at, favorite, notes FROM connections WHERE host = ?1 AND port = ?2 AND protocol = ?3 AND username = ?4",
         )?;
         let mut rows = stmt.query_map(params![host, port, protocol, username], |row| {
             Self::row_to_entry(row)
@@ -507,6 +513,7 @@ impl Database {
                 private_key_path: c.private_key_path.clone(),
                 group_id: resolved_group_id,
                 tags: c.tags.clone(),
+                notes: Some(c.notes.clone()),
             };
 
             if let Some(conn) = existing {

@@ -14,6 +14,7 @@ pub struct ConnEntry {
     pub private_key_path: Option<String>,
     pub group_id: Option<String>,
     pub tags: Vec<String>,
+    pub notes: String,
     pub sort_order: i64,
     pub created_at: String,
     pub updated_at: String,
@@ -33,6 +34,8 @@ pub struct ConnEntryInput {
     pub private_key_path: Option<String>,
     pub group_id: Option<String>,
     pub tags: Vec<String>,
+    #[serde(default)]
+    pub notes: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -153,6 +156,8 @@ pub struct ImportConnEntry {
     pub tags: Vec<String>,
     #[serde(default)]
     pub favorite: bool,
+    #[serde(default)]
+    pub notes: String,
 }
 
 #[derive(Debug, Deserialize)]

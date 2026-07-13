@@ -83,6 +83,7 @@ function applySettings() {
   document.getElementById("pageTitle").textContent = t("appTitle")
   updateI18n()
   updateSortBtn()
+  updateHamburger()
 }
 
 function updateI18n() {
@@ -239,6 +240,7 @@ function onDragStart(e) {
   draggedId = e.currentTarget.dataset.id
   e.currentTarget.classList.add("dragging")
   e.dataTransfer.effectAllowed = "move"
+  e.dataTransfer.setData("text/plain", draggedId)
 }
 
 function onDragEnd(e) {
@@ -457,6 +459,7 @@ function showConnectionModal(id) {
     else document.getElementById("connKeyPath").value = conn.privateKeyPath || ""
     document.getElementById("connGroup").value = conn.groupId || ""
     document.getElementById("connTags").value = conn.tags.join(", ")
+    document.getElementById("connNotes").value = conn.notes || ""
     toggleAuthFields()
     togglePort()
   }
@@ -475,6 +478,7 @@ async function saveConnection(e) {
     authType: document.getElementById("connAuthType").value,
     groupId: document.getElementById("connGroup").value || undefined,
     tags: document.getElementById("connTags").value.split(",").map(t => t.trim()).filter(Boolean),
+    notes: document.getElementById("connNotes").value || "",
   }
   if (data.authType === "password") data.password = document.getElementById("connPassword").value
   else data.privateKeyPath = document.getElementById("connKeyPath").value
@@ -734,6 +738,54 @@ function showToast(message, type = "info") {
 function init() {
   document.getElementById("connectionForm").addEventListener("submit", saveConnection)
   document.getElementById("groupForm").addEventListener("submit", saveGroup)
+
+  // Hamburger menu
+  function updateHamburger() {
+    const dd = document.getElementById("hamburgerDropdown")
+    const items = [
+      { id: "hamburgerSortDir", icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></svg>', label: "sort" },
+      { id: "hamburgerSortName", icon: "", label: "fieldName" },
+      { id: "hamburgerSortHost", icon: "", label: "fieldHost" },
+      { id: "hamburgerSortProtocol", icon: "", label: "fieldProtocol" },
+      { id: "hamburgerSep1", isSep: true },
+      { id: "hamburgerQc", icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 3l0 7l6 0l-8 11l0 -7l-6 0l8 -11"/></svg>', label: "quickConnect" },
+      { id: "hamburgerAddConn", icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5l0 14"/><path d="M5 12l14 0"/></svg>', label: "newConnectionShort" },
+      { id: "hamburgerAddGroup", icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19h-7a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2h4l3 3h7a2 2 0 0 1 2 2v3.5"/><path d="M16 19h6"/><path d="M19 16v6"/></svg>', label: "addGroup" },
+      { id: "hamburgerPing", icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 10l4 4"/><path d="M4 12a8 8 0 1 0 16 0a8 8 0 0 0 -16 0"/></svg>', label: "pingAll" },
+      { id: "hamburgerSettings", icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.066 2.573c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.573 1.066c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.066 -2.573c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c.996 .608 2.296 .07 2.572 -1.065z"/><path d="M15 12a3 3 0 1 0 -6 0a3 3 0 0 0 6 0"/></svg>', label: "settings" },
+    ]
+    dd.innerHTML = items.map(item => {
+      if (item.isSep) return '<div class="hamburger-sep"></div>'
+      return `<button class="hamburger-item" data-id="${item.id}">${item.icon}<span>${t(item.label)}</span></button>`
+    }).join("")
+  }
+  window.updateHamburger = updateHamburger
+
+  document.getElementById("hamburgerBtn").addEventListener("click", () => {
+    document.getElementById("hamburgerDropdown").classList.toggle("open")
+  })
+  document.addEventListener("click", e => {
+    const dd = document.getElementById("hamburgerDropdown")
+    const btn = document.getElementById("hamburgerBtn")
+    if (!btn.contains(e.target) && !dd.contains(e.target)) dd.classList.remove("open")
+  })
+  // Delegate clicks inside hamburger dropdown
+  document.getElementById("hamburgerDropdown").addEventListener("click", e => {
+    const btn = e.target.closest(".hamburger-item")
+    if (!btn) return
+    document.getElementById("hamburgerDropdown").classList.remove("open")
+    const id = btn.dataset.id
+    if (id === "hamburgerQc") showQuickConnect()
+    else if (id === "hamburgerAddConn") showConnectionModal()
+    else if (id === "hamburgerAddGroup") showGroupModal()
+    else if (id === "hamburgerPing") pingAllHosts()
+    else if (id === "hamburgerSettings") showSettingsModal()
+    else if (id === "hamburgerSortDir") toggleSortDir()
+    else if (id === "hamburgerSortName") onSortFieldChange("name")
+    else if (id === "hamburgerSortHost") onSortFieldChange("host")
+    else if (id === "hamburgerSortProtocol") onSortFieldChange("protocol")
+  })
+  updateHamburger()
 
   document.getElementById("searchInput").addEventListener("input", filterConnections)
   document.getElementById("sortDirBtn").addEventListener("click", toggleSortDir)
