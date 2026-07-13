@@ -279,7 +279,16 @@ body {
 }
 
 /* Tree View */
-.tree-section { border-bottom: 1px solid var(--border); }
+.tree-section { border-bottom: 1px solid var(--border); position: relative; }
+
+.tree-section.group-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--gc);
+  opacity: 0.06;
+  pointer-events: none;
+}
 
 .tree-section-header {
   display: flex;

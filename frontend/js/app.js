@@ -183,7 +183,8 @@ function renderSection(s) {
 
   const rows = s.conns.map(c => renderRow(c)).join("")
 
-  return `<div class="tree-section">
+  const groupStyle = s.group ? ` style="--gc:${esc(s.color)}"` : ""
+  return `<div class="tree-section${s.group ? " group-section" : ""}"${groupStyle}>
     <div class="tree-section-header ${isCollapsed ? "collapsed" : ""}"
          data-action="${s.collapsible ? "toggleCollapse" : ""}"
          data-section="${sanitizeId(s.id)}">
