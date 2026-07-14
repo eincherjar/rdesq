@@ -112,23 +112,7 @@ fn launch_ssh(conn: &ConnEntry) -> Result<LaunchResult, String> {
         "password" if !pass.is_empty() => {
             #[cfg(target_os = "windows")]
             {
-                if let Some(plink) = find_plink() {
-                    let mut plink_args = vec![
-                        "-ssh".into(),
-                        "-pw".into(), pass,
-                        "-batch".into(),
-                        target.clone(),
-                    ];
-                    if conn.port != 22 {
-                        plink_args.push("-P".into());
-                        plink_args.push(conn.port.to_string());
-                    }
-                    return launch_in_system_terminal(&plink.to_string_lossy(), &plink_args);
-                }
-                return Ok(LaunchResult {
-                    success: false,
-                    message: "plink.exe not found. Install PuTTY or place plink.exe next to the app.".into(),
-                });
+                // Windows ssh.exe handles password interactively in the terminal
             }
             #[cfg(not(target_os = "windows"))]
             {
@@ -147,33 +131,6 @@ fn launch_ssh(conn: &ConnEntry) -> Result<LaunchResult, String> {
     }
 
     launch_in_system_terminal("ssh", &args)
-}
-
-#[cfg(target_os = "windows")]
-fn find_plink() -> Option<std::path::PathBuf> {
-    use std::sync::OnceLock;
-    static PLINK: OnceLock<Option<std::path::PathBuf>> = OnceLock::new();
-
-    PLINK.get_or_init(|| {
-        // 1. Check PATH
-        if let Ok(output) = ProcCommand::new("where").arg("plink.exe").output() {
-            if output.status.success() {
-                let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
-                if !path.is_empty() {
-                    return Some(std::path::PathBuf::from(path));
-                }
-            }
-        }
-
-        // 2. Extract embedded plink.exe to temp dir
-        let plink_data = include_bytes!("../binaries/plink.exe");
-        let tmp_path = std::env::temp_dir().join("rdesq-plink.exe");
-        if tmp_path.exists() || std::fs::write(&tmp_path, plink_data).is_ok() {
-            return Some(tmp_path);
-        }
-
-        None
-    }).clone()
 }
 
 fn launch_in_system_terminal(program: &str, args: &[String]) -> Result<LaunchResult, String> {

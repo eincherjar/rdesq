@@ -5,7 +5,10 @@ mod models;
 mod ping;
 
 use db::Database;
+use std::io::{Read, Write};
+use std::net::{TcpListener, TcpStream};
 use std::path::PathBuf;
+use std::sync::mpsc;
 
 use tauri::{
     image::Image,
@@ -17,10 +20,50 @@ use tauri_plugin_autostart::ManagerExt;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // ─── Single-instance lock ───────────────────────────
+    let (focus_tx, focus_rx) = mpsc::channel();
+
+    match TcpListener::bind("127.0.0.1:41983") {
+        Ok(listener) => {
+            std::thread::spawn(move || {
+                for stream in listener.incoming() {
+                    if let Ok(mut stream) = stream {
+                        let mut buf = [0; 16];
+                        if stream.read(&mut buf).is_ok() && buf.starts_with(b"focus") {
+                            let _ = focus_tx.send(());
+                        }
+                    }
+                }
+            });
+        }
+        Err(_) => {
+            if let Ok(mut stream) = TcpStream::connect("127.0.0.1:41983") {
+                let _ = stream.write_all(b"focus");
+            }
+            std::process::exit(0);
+        }
+    }
+
     tauri::Builder::default()
         .plugin(tauri_plugin_autostart::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
         .setup(move |app| {
+            // ─── Single-instance focus handler ───────────
+            let handle = app.handle().clone();
+            std::thread::spawn(move || {
+                while focus_rx.recv().is_ok() {
+                    let h = handle.clone();
+                    let h_inner = h.clone();
+                    let _ = h.run_on_main_thread(move || {
+                        if let Some(window) = h_inner.get_webview_window("main") {
+                            let _ = window.show();
+                            let _ = window.unminimize();
+                            let _ = window.set_focus();
+                        }
+                    });
+                }
+            });
+
             let app_dir: PathBuf = app.path().app_data_dir().expect("failed to get app data dir");
             let database = Database::new(app_dir).expect("failed to initialize database");
             let settings = database.get_settings();
