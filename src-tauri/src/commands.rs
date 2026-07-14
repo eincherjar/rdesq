@@ -232,8 +232,9 @@ fn launch_in_system_terminal(program: &str, args: &[String]) -> Result<LaunchRes
         }
 
         if command_exists("wt") {
-            // Windows Terminal: wrap in cmd /k so the window stays open
+            // Windows Terminal: new tab with cmd /k so window stays open
             let mut cmd = ProcCommand::new("wt.exe");
+            cmd.arg("-w").arg("0").arg("nt");
             cmd.arg("cmd").arg("/k").arg(&cmdline);
             match cmd.spawn() {
                 Ok(_) => return Ok(LaunchResult { success: true, message: "SSH launched".into() }),

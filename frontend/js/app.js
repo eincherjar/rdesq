@@ -498,7 +498,9 @@ async function saveConnection(e) {
 async function launchConnection(id) {
   try {
     const result = await API.launchConnection(id)
-    showToast(result.message, result.success ? "info" : "error")
+    const known = { "SSH launched": "sshLaunched", "RDP launched": "rdpLaunched", "SSH launched (no terminal)": "sshLaunched" }
+    const msg = known[result.message] ? t(known[result.message]) : result.message
+    showToast(msg, result.success ? "info" : "error")
   } catch (err) { showToast(err.message, "error") }
 }
 
