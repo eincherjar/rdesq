@@ -232,37 +232,25 @@ fn launch_in_system_terminal(program: &str, args: &[String]) -> Result<LaunchRes
         }
 
         if command_exists("wt") {
-            // Windows Terminal: new tab with cmd /k so window stays open
-            let mut cmd = ProcCommand::new("wt.exe");
-            cmd.arg("-w").arg("0").arg("nt");
-            cmd.arg("cmd").arg("/k").arg(&cmdline);
-            match cmd.spawn() {
-                Ok(_) => return Ok(LaunchResult { success: true, message: "SSH launched".into() }),
-                Err(_) => {}
+            if ProcCommand::new("wt.exe").arg("cmd").arg("/k").arg(&cmdline).spawn().is_ok() {
+                return Ok(LaunchResult { success: true, message: "SSH launched".into() });
             }
         }
 
         if command_exists("pwsh") {
-            match ProcCommand::new("pwsh.exe").args(["-NoExit", "-Command", &cmdline]).spawn() {
-                Ok(_) => return Ok(LaunchResult { success: true, message: "SSH launched".into() }),
-                Err(_) => {}
+            if ProcCommand::new("pwsh.exe").args(["-NoExit", "-Command", &cmdline]).spawn().is_ok() {
+                return Ok(LaunchResult { success: true, message: "SSH launched".into() });
             }
         }
 
         if command_exists("powershell") {
-            match ProcCommand::new("powershell.exe").args(["-NoExit", "-Command", &cmdline]).spawn() {
-                Ok(_) => return Ok(LaunchResult { success: true, message: "SSH launched".into() }),
-                Err(_) => {}
+            if ProcCommand::new("powershell.exe").args(["-NoExit", "-Command", &cmdline]).spawn().is_ok() {
+                return Ok(LaunchResult { success: true, message: "SSH launched".into() });
             }
         }
 
-        // Use CREATE_NO_WINDOW to suppress any console flash
-        const CREATE_NO_WINDOW: u32 = 0x08000000;
-        match ProcCommand::new("cmd.exe")
-            .creation_flags(CREATE_NO_WINDOW)
-            .args(["/c", &format!("start \"SSH\" cmd /k \"{}\"", cmdline)])
-            .spawn()
-        {
+        // Fallback: single cmd.exe window with /k (stays open after ssh exits)
+        match ProcCommand::new("cmd.exe").args(["/k", &cmdline]).spawn() {
             Ok(_) => Ok(LaunchResult { success: true, message: "SSH launched".into() }),
             Err(e) => Ok(LaunchResult { success: false, message: format!("Failed to launch SSH: {}", e) }),
         }
