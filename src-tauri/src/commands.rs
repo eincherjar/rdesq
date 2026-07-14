@@ -110,20 +110,70 @@ fn launch_ssh(conn: &ConnEntry) -> Result<LaunchResult, String> {
             args.insert(1, key);
         }
         "password" if !pass.is_empty() => {
-            if command_exists("sshpass") {
-                let mut full = vec!["-p".to_string(), pass, "ssh".to_string()];
-                full.extend(args.clone());
-                return launch_in_system_terminal("sshpass", &full);
+            #[cfg(target_os = "windows")]
+            {
+                if let Some(plink) = find_plink() {
+                    let mut plink_args = vec![
+                        "-ssh".into(),
+                        "-pw".into(), pass,
+                        "-batch".into(),
+                        target.clone(),
+                    ];
+                    if conn.port != 22 {
+                        plink_args.push("-P".into());
+                        plink_args.push(conn.port.to_string());
+                    }
+                    return launch_in_system_terminal(&plink.to_string_lossy(), &plink_args);
+                }
+                return Ok(LaunchResult {
+                    success: false,
+                    message: "plink.exe not found. Install PuTTY or place plink.exe next to the app.".into(),
+                });
             }
-            return Ok(LaunchResult {
-                success: false,
-                message: "sshpass not installed. Install it or use key-based auth.".into(),
-            });
+            #[cfg(not(target_os = "windows"))]
+            {
+                if command_exists("sshpass") {
+                    let mut full = vec!["-p".to_string(), pass, "ssh".to_string()];
+                    full.extend(args.clone());
+                    return launch_in_system_terminal("sshpass", &full);
+                }
+                return Ok(LaunchResult {
+                    success: false,
+                    message: "sshpass not installed. Install it or use key-based auth.".into(),
+                });
+            }
         }
         _ => {}
     }
 
     launch_in_system_terminal("ssh", &args)
+}
+
+#[cfg(target_os = "windows")]
+fn find_plink() -> Option<std::path::PathBuf> {
+    use std::sync::OnceLock;
+    static PLINK: OnceLock<Option<std::path::PathBuf>> = OnceLock::new();
+
+    PLINK.get_or_init(|| {
+        // 1. Check PATH
+        if let Ok(output) = ProcCommand::new("where").arg("plink.exe").output() {
+            if output.status.success() {
+                let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
+                if !path.is_empty() {
+                    return Some(std::path::PathBuf::from(path));
+                }
+            }
+        }
+
+        // 2. Extract embedded plink.exe to temp dir
+        let plink_data = include_bytes!("../binaries/plink.exe");
+        let tmp_path = std::env::temp_dir().join("rdesq-plink.exe");
+        if tmp_path.exists() || std::fs::write(&tmp_path, plink_data).is_ok() {
+            return Some(tmp_path);
+        }
+
+        None
+    }).clone()
 }
 
 fn launch_in_system_terminal(program: &str, args: &[String]) -> Result<LaunchResult, String> {
@@ -210,7 +260,7 @@ fn launch_in_system_terminal(program: &str, args: &[String]) -> Result<LaunchRes
 
     #[cfg(target_os = "windows")]
     {
-        // Build quoted cmdline for shells
+        // Build quoted cmdline for shells (preserves spaces in paths)
         let mut cmdline = String::new();
         cmdline.push_str(program);
         for a in args {
@@ -225,9 +275,9 @@ fn launch_in_system_terminal(program: &str, args: &[String]) -> Result<LaunchRes
         }
 
         if command_exists("wt") {
+            // Windows Terminal: wrap in cmd /k so the window stays open
             let mut cmd = ProcCommand::new("wt.exe");
-            cmd.arg(program);
-            for a in args { cmd.arg(a); }
+            cmd.arg("cmd").arg("/k").arg(&cmdline);
             match cmd.spawn() {
                 Ok(_) => return Ok(LaunchResult { success: true, message: "SSH launched".into() }),
                 Err(_) => {}
@@ -248,7 +298,13 @@ fn launch_in_system_terminal(program: &str, args: &[String]) -> Result<LaunchRes
             }
         }
 
-        match ProcCommand::new("cmd.exe").args(["/c", &format!("start \"SSH\" cmd /k \"{}\"", cmdline)]).spawn() {
+        // Use CREATE_NO_WINDOW to suppress any console flash
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        match ProcCommand::new("cmd.exe")
+            .creation_flags(CREATE_NO_WINDOW)
+            .args(["/c", &format!("start \"SSH\" cmd /k \"{}\"", cmdline)])
+            .spawn()
+        {
             Ok(_) => Ok(LaunchResult { success: true, message: "SSH launched".into() }),
             Err(e) => Ok(LaunchResult { success: false, message: format!("Failed to launch SSH: {}", e) }),
         }

@@ -1,0 +1,2 @@
+# Ignore the downloaded binary (downloaded by CI or manually)
+plink.exe

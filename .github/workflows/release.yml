@@ -94,6 +94,10 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
+      - name: Download plink.exe (for SSH password auth)
+        shell: pwsh
+        run: powershell -File src-tauri/binaries/download-plink.ps1
+
       - name: Build
         run: npx tauri build
 
